@@ -2,7 +2,7 @@ import os
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, session,current_app
 from FlaskApp import app, db, bcrypt
-from FlaskApp.form import RegistrationForm, LoginForm, UpdateAccount
+from FlaskApp.form import RegistrationForm, LoginForm, UpdateAccount, UploadPost
 from FlaskApp.models import User
 from flask_login import login_user, logout_user, current_user, login_required
 import secrets
@@ -82,8 +82,6 @@ def save_picture(p_image):
     print(image_fn)
     return image_fn
 
-
-
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
@@ -107,3 +105,11 @@ def profile():
     image_file = url_for('static', filename='image/'+ current_user.image_file)
     return render_template('edit.html',image_file=image_file, form=form)
 
+@app.route('/post/new')
+@login_required
+def post():
+    form = UploadPost()
+    if form.validate_on_submit():
+        return redirect('Dashboard')
+
+    return render_template('CreatePost.html')

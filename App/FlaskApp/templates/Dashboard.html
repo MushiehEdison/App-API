@@ -17,9 +17,9 @@
                 <img src="{{image_file}}" class="rounded-circle mb-4" style="height: 100px; width: 95px; object-fit: cover;" alt="profile">
                 <h2 class="mt-2" style="font-size: 1.5rem; font-weight: 700; color: rgb(19, 19, 19);"><a href="{{url_for('account')}}" style="text-decoration: none; color: black;">{{current_user.username}}</a></h2>
                 <!-- Navigation links -->
-                <ul class="nav flex-column mt-5" style="font-size: 1.4rem; border-top: 1px solid black;">
+                <ul class="nav flex-column mt-1" style="font-size: 1.4rem; border-top: 1px solid black;">
                     <li class="nav-item py-4">
-                        <a class="nav-link d-flex align-items-center" href="#" style="color: black;">
+                        <a class="nav-link d-flex align-items-center" href="" style="color: black;">
                             <i class="fas fa-home me-2"></i> Home
                         </a>
                     </li>
@@ -39,7 +39,7 @@
                         </a>
                     </li>
                     <li class="nav-item py-3">
-                        <a class="nav-link d-flex align-items-center" href="#" style="color: black;">
+                        <a class="nav-link d-flex align-items-center" href="{{url_for('post')}}" style="color: black;">
                             <i class="fa-solid fa-square-plus me-2"></i> Create
                         </a>
                     </li>
@@ -54,7 +54,7 @@
                 <div class="m-0">
                     <a href="#" style="font-size: 1.4rem; text-decoration: none; color: black;"><i class="fa-solid fa-bars"></i> <span style="margin: 0 1em;">More</span> </a>
                 </div>
-                <div class="flex-column">
+                <div class="flex-column" id="flex-column">
                     <span style=" padding: .5em 1em; border-radius: 25px; font-size: 1rem; font-weight: 700; margin: 0 1em; border: none;"><a href="{{url_for('account')}}" style="text-decoration: none; color: black;">{{current_user.username}}</a></span>
                     <img src="{{image_file}}" class="rounded-circle mb-1" style="height: 70px; width: 68px; object-fit: cover;" alt="profile">
                 </div>
@@ -362,7 +362,7 @@
             <a class="nav-link" href="message.html"><i class="fa-solid fa-message"></i></a>
         </li>
         <li class="nav-item py-3">
-            <a class="nav-link" href="#"><i class="fa-solid fa-square-plus"></i></a>
+            <a class="nav-link" href="{{url_for('post')}}"><i class="fa-solid fa-square-plus"></i></a>
         </li>
         <li class="nav-item py-3">
             <a class="nav-link" href="Notifications.html"><i class="fa-solid fa-bell"></i> </a>
