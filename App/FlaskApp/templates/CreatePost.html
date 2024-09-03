@@ -8,7 +8,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <form method="post" action="/post" enctype="multipart/form-data">
+    <form method="POST" action="{{url_for('post') }}" enctype="multipart/form-data">
+         {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+    {% endwith %}
+        {{ form.hidden_tag()}}
         <div class="container">
             <a href="{{url_for('home')}}">
                 <i class="fa-solid fa-arrow-left" style="color: black; font-size: 1.5rem; font-weight:700; margin: 0.6em 0; cursor: pointer;"></i>
@@ -16,21 +28,20 @@
 
         <div class="upload-section">
             <h2>Upload Tweet</h2>
-            <textarea id="tweet-input" placeholder="What's on your mind?" maxlength="500"></textarea>
-            <button class="upload-btn"><i class="fas fa-share-square"></i> Post Tweet</button>
+            <textarea id="tweet-input" name="tweet" placeholder="What's on your mind?" maxlength="500"></textarea>
+            <button class="upload-btn" type="submit" value="tweet" name="action"><i class="fas fa-share-square"></i> Post Tweet</button>
         </div>
-
         <div class="upload-section">
             <h2>Upload Image/Video</h2>
             <div class="icon-container">
                 <label for="image-input" class="icon-label"><i class="fas fa-image"></i></label>
                 <label for="video-input" class="icon-label"><i class="fas fa-video"></i></label>
             </div>
-            <input type="file" id="image-input" accept="image/*" style="display: none;">
-            <input type="file" id="video-input" accept="video/*" style="display: none;">
+            <input type="file" id="image-input" name="image"  accept="image/*" style="display: none;">
+            <input type="file" id="video-input" name="video" accept="video/*" style="display: none;">
             <div id="preview" class="preview-box">Preview will appear here</div>
-            <textarea id="tweet-input-caption" placeholder=" Caption ... " maxlength="100"></textarea>
-            <button class="upload-btn"><i class="fas fa-upload"></i> Post Image/Video</button>
+            <textarea id="tweet-input-caption" name="caption" placeholder=" Caption ... " maxlength="1000"></textarea>
+            <button class="upload-btn" type="submit" value="media" name="media"><i class="fas fa-upload"></i> Post Image/Video</button>
         </div>
     </div>
     </form>

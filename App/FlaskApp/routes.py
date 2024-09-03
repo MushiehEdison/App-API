@@ -1,15 +1,50 @@
 import os
 from PIL import Image
+from moviepy.editor import VideoFileClip
 from flask import render_template, url_for, flash, redirect, request, session,current_app
 from FlaskApp import app, db, bcrypt
 from FlaskApp.form import RegistrationForm, LoginForm, UpdateAccount, UploadPost
-from FlaskApp.models import User
+from FlaskApp.models import User,TweetPost, MediaPost, time_ago
 from flask_login import login_user, logout_user, current_user, login_required
 import secrets
+from werkzeug.utils import secure_filename
+from itertools import chain
+from datetime import  datetime
+from operator import attrgetter
+
+def time_ago(time):
+    now = datetime.utcnow()
+    diff = now - time
+
+    seconds = diff.total_seconds()
+    minutes = int(seconds // 60)
+    hours = int(minutes // 60)
+    days = int(hours // 24)
+    weeks = int(days // 7)
+
+    if seconds < 60:
+        return "just now"
+    elif minutes < 60:
+        return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+    elif hours < 24:
+        return f"{hours} hour{'s' if hours != 1 else ''} ago"
+    elif days < 7:
+        return f"{days} day{'s' if days != 1 else ''} ago"
+    elif weeks < 5:
+        return f"{weeks} week{'s' if weeks != 1 else ''} ago"
+    else:
+        return time.strftime('%B %d, %Y')
 @app.route('/')
 def home():
-    image_file = url_for('static', filename='image/'+ current_user.image_file)
-    return render_template('Dashboard.html', image_file=image_file)
+    tweets = TweetPost.query.filter_by(username=current_user.username).all()
+    mediaa = MediaPost.query.filter_by(username=current_user.username).all()
+    Posts = tweets + mediaa
+    posts_sorted = sorted(Posts, key=lambda post: post.timestamp, reverse=True)
+    for post in Posts:
+        post.time_ago = time_ago(post.timestamp)
+    combined_posts = sorted(chain(tweets, mediaa), key=attrgetter('timestamp'), reverse=True)
+    image_file = url_for('static', filename='image/' + current_user.image_file)
+    return render_template('Dashboard.html', image_file=image_file, posts=combined_posts, post =posts_sorted)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -24,7 +59,7 @@ def register():
         confirm_password = request.form['confirm_password']
         if password != confirm_password:
             flash('Passwords do not match!', 'danger')
-            return redirect('login')
+            return redirect('register')
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(name=name, username=username, email=email, password=hashed_password)
         db.session.add(user)
@@ -65,8 +100,11 @@ def logout():
 
 @app.route('/account')
 def account():
+    tweets = TweetPost.query.filter_by(username=current_user.username).all()
+    mediaa = MediaPost.query.filter_by(username=current_user.username).all()
+    combined_posts = sorted(chain(tweets, mediaa), key=attrgetter('timestamp'), reverse=True)
     image_file = url_for('static', filename='image/' + current_user.image_file)
-    return render_template('Account.html', image_file=image_file)
+    return render_template('Account.html', image_file=image_file , posts=combined_posts)
 
 def save_picture(p_image):
     random_hex = secrets.token_hex(8)
@@ -105,11 +143,55 @@ def profile():
     image_file = url_for('static', filename='image/'+ current_user.image_file)
     return render_template('edit.html',image_file=image_file, form=form)
 
-@app.route('/post/new')
+def media(p_media):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(p_media.filename)
+    media_fn = random_hex + f_ext
+    media_path = os.path.join(current_app.root_path, 'static/post_made', media_fn)
+
+    if f_ext.lower() in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+        i = Image.open(p_media)
+        i.save(media_path)
+    elif f_ext.lower() in ['.mp4', '.avi', '.mov', '.wmv']:
+        p_media.save(media_path)
+        clip = VideoFileClip(media_path)
+        clip.write_videofile(media_path)
+    else:
+        p_media.save(media_path)
+
+    return media_fn, f_ext
+
+
+@app.route('/post/new', methods=['POST','GET'])
 @login_required
 def post():
     form = UploadPost()
     if form.validate_on_submit():
-        return redirect('Dashboard')
+        if request.form['tweet']:
+            print('valid')
+            new_post = TweetPost(username=current_user.username, tweet=form.tweet.data,userID=current_user.id)
+            db.session.add(new_post)
+            db.session.commit()
+            print('tweet posted')
+            flash('Your Post has been uploaded', 'success')
+            return redirect(url_for('home'))
+        else:
+            print('valid')
+            if form.image.data:
+                media_path, media_ext = media(form.image.data)
+                media_post= MediaPost(username=current_user.username, mediaPath=media_path, mediaExt=media_ext, caption=form.caption.data, userID=current_user.id)
+                db.session.add(media_post)
+                db.session.commit()
+                print('image was posted')
+                flash('Your Post has been uploaded', 'success')
+                return redirect(url_for('home'))
+            elif form.video.data:
+                media_path, media_ext = media(form.video.data)
+                media_post = MediaPost(username=current_user.username, mediaPath=media_path, mediaExt=media_ext,
+                                       caption=form.caption.data, userID=current_user.id)
+                db.session.add(media_post)
+                db.session.commit()
+                print('video was posted')
 
-    return render_template('CreatePost.html')
+    return render_template('CreatePost.html', form=form)
+
